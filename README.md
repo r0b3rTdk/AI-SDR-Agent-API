@@ -71,17 +71,6 @@ Exemplo de resposta:
 Mensagem: **“Olá! Tudo bem? Eu sou [seu nome], da Verzel. [...] Me conta, qual o seu nome...?”**
 Acesse o endereço `http://127.0.0.1:8000/docs` para abrir a documentação interativa e testar os endpoints diretamente pelo navegador.
 
-### Endpoint de Chat (/chat)
-Recebe uma mensagem e retorna uma resposta simulada (mock).  
-O retorno esperado é um JSON com o campo “response”, confirmando a simulação.
-
-Exemplo de resposta:  
-Mensagem: **“Resposta simulada para: 'Olá, tudo bem?'”**
-
-Acesse o endereço `http://127.0.0.1:8000/docs` para abrir a documentação interativa e testar os endpoints diretamente pelo navegador.
-
----
-
 ## 📂 Arquivos Importantes
 
 - **main.py:** Arquivo principal da aplicação que define os endpoints e a inicialização do servidor.  

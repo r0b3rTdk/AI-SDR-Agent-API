@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 import uvicorn
 from pydantic import BaseModel
+from services.openai_service import generate_response
 
 # Criar a instancia principal da aplicacao
 app = FastAPI(
@@ -29,13 +30,12 @@ def read_root():
 def handle_chat(request: ChatRequest):
     """
     Recebe uma mensagem do usuario e retorna uma resposta do agente
-    (simulado por enquanto).
     """
     print(f"Mensagem recebida: {request.message}")
-    # TODO: Substituir este mock por uma chamada real à OpenAI
-    mock_response = f"Resposta simulada para: {request.message}"
     
-    return ChatResponse(response=mock_response)
+    ai_response = generate_response(request.message)
+    print(f"Resposta da IA: {ai_response}")    
+    return ChatResponse(response=ai_response)
     
 # Permite rodar o app diretamente com python main.py
 if __name__ == "__main__":

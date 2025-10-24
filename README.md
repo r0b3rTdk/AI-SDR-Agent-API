@@ -7,14 +7,15 @@ O objetivo é criar um agente SDR capaz de interagir com potenciais clientes, qu
 
 ## 🚀 Status do Projeto
 
-Fase atual: **Backend funcional (v0.1.0)**  
-Próximo passo: Integração com OpenAI para gerar respostas reais.
+Fase atual: **Backend com IA Real (v0.2.0)**  
+Próximo passo: Adicionar lógica de qualificação de leads (memória e gatilho).
 
 ### Funcionalidades Implementadas
 
 - Servidor web utilizando FastAPI.
 - Endpoint raiz (/) para verificação de status.
 - Endpoint /chat (POST) para envio e retorno de mensagens simuladas.
+- Integração real com a API da OpenAI para gerar respostas inteligentes.
 - Estrutura de ambiente virtual (venv) configurada.
 - Arquivo .env.example para gerenciamento de chaves e variáveis de ambiente.
 - Documentação interativa gerada automaticamente em /docs (Swagger UI).
@@ -36,6 +37,7 @@ Na pasta backend ficam todos os arquivos principais do servidor, incluindo o arq
 - **Pydantic** — Modelagem e validação de dados.  
 - **python-dotenv** — Leitura de variáveis de ambiente.  
 - **Swagger UI** — Interface interativa de teste de endpoints.
+- **OpenAI** — Para geração de respostas do agente de IA.
 
 ---
 
@@ -59,8 +61,15 @@ A API conta com dois endpoints principais que podem ser testados via Swagger UI.
 Verifica se o servidor está online.  
 O retorno esperado é uma mensagem confirmando o status ativo da API.
 
-Exemplo de resposta:  
+Exemplo de resposta:  
 Mensagem: **“AI SDR Agent API - online”**
+
+### Endpoint de Chat (/chat)
+Recebe uma **única mensagem** e retorna uma **resposta real** e inteligente da IA.
+
+Exemplo de resposta:
+Mensagem: **“Olá! Tudo bem? Eu sou [seu nome], da Verzel. [...] Me conta, qual o seu nome...?”**
+Acesse o endereço `http://127.0.0.1:8000/docs` para abrir a documentação interativa e testar os endpoints diretamente pelo navegador.
 
 ### Endpoint de Chat (/chat)
 Recebe uma mensagem e retorna uma resposta simulada (mock).  
@@ -77,14 +86,14 @@ Acesse o endereço `http://127.0.0.1:8000/docs` para abrir a documentação inte
 
 - **main.py:** Arquivo principal da aplicação que define os endpoints e a inicialização do servidor.  
 - **.env.example:** Modelo para variáveis de ambiente.  
-- **.gitignore:** Define os arquivos e pastas ignorados pelo controle de versão.  
+- **.gitignore:** Define os arquivos e pastas ignorados pelo controle de versão.
+- **services/openai_service.py:** Módulo que contém a lógica de "cérebro" e a comunicação com a API da OpenAI.  
 - **requirements.txt:** Lista das dependências necessárias para rodar o projeto.  
 
 ---
 
 ## 🔮 Próximos Passos
 
-- Integração com a API da OpenAI para respostas reais de IA.  
 - Adicionar lógica de qualificação de leads.  
 - Criar endpoint /lead e integração com Pipefy API.  
 - Conectar com ferramenta de agendamento (Google/Calendly).  

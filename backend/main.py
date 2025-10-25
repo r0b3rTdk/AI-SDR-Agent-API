@@ -2,18 +2,22 @@ from fastapi import FastAPI
 import uvicorn
 from pydantic import BaseModel
 from services.openai_service import generate_response
+from typing import List, Dict
 
 # Criar a instancia principal da aplicacao
 app = FastAPI(
     title="AI SDR Agent API",
     description="API para o agente SDR de IA",
-    version="0.1.0"
+    version="0.3.0"
 )
 
 # --- Modelo de Dados (Pydantic) ---
 # Definir como o corpo da requisicao /chat deve ser
 class ChatRequest(BaseModel):
-    message: str
+    # A API agora vai receber o historico da conversa
+    # EXEMPLO: [{"role": "user", "content": "Oi"}, {"role": "assistant", "content": "Olá"}]
+    history: List[Dict[str, str]]
+    
 # Definir como sera a resposta do /chat
 class ChatResponse(BaseModel):
     response: str
@@ -29,11 +33,17 @@ def read_root():
 @app.post("/chat", response_model=ChatResponse)
 def handle_chat(request: ChatRequest):
     """
-    Recebe uma mensagem do usuario e retorna uma resposta do agente
+    Recebe um HISTORICO de mensagens, processa pela OpenIA e retorna uma resposta
     """
-    print(f"Mensagem recebida: {request.message}")
+    # Logar apenas a ultima mensagem para nao poluir demais o console
+    if request.history:
+        print(f"Histórico recebido(ultima msg): {request.history[-1]['content']}")
+    else:
+        print("Histórico recebido vazio")
     
-    ai_response = generate_response(request.message)
+    # Passar o historico para a funcao de gerar resposta  
+    ai_response = generate_response(request.history)
+    
     print(f"Resposta da IA: {ai_response}")    
     return ChatResponse(response=ai_response)
     

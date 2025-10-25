@@ -7,15 +7,17 @@ O objetivo é criar um agente SDR capaz de interagir com potenciais clientes, qu
 
 ## 🚀 Status do Projeto
 
-Fase atual: **Backend com IA Real (v0.2.0)**  
-Próximo passo: Adicionar lógica de qualificação de leads (memória e gatilho).
+Fase atual: **Backend com Memória e Gatilho (v0.3.0)**  
+Próximo passo: Criar endpoint /lead e integração com Pipefy API.
 
 ### Funcionalidades Implementadas
 
 - Servidor web utilizando FastAPI.
 - Endpoint raiz (/) para verificação de status.
-- Endpoint /chat (POST) para envio e retorno de mensagens simuladas.
+- Endpoint /chat (POST) para envio e retorno de mensagens.
 - Integração real com a API da OpenAI para gerar respostas inteligentes.
+- Implementação de memória de conversa (o backend agora lida com um histórico).
+- Lógica de "gatilho" de qualificação (IA retorna um JSON com os dados do lead).
 - Estrutura de ambiente virtual (venv) configurada.
 - Arquivo .env.example para gerenciamento de chaves e variáveis de ambiente.
 - Documentação interativa gerada automaticamente em /docs (Swagger UI).
@@ -65,10 +67,11 @@ Exemplo de resposta:  
 Mensagem: **“AI SDR Agent API - online”**
 
 ### Endpoint de Chat (/chat)
-Recebe uma **única mensagem** e retorna uma **resposta real** e inteligente da IA.
+Recebe um **histórico de mensagens** e retorna uma **resposta real** e inteligente da IA, provando ter "memória" e continuando a conversa de qualificação.
 
-Exemplo de resposta:
-Mensagem: **“Olá! Tudo bem? Eu sou [seu nome], da Verzel. [...] Me conta, qual o seu nome...?”**
+Exemplo de resposta (após o usuário dizer o nome): 
+Mensagem: **“Prazer em conhecer você, Robert! Para continuar, poderia me informar seu e-mail, por favor?”**
+
 Acesse o endereço `http://127.0.0.1:8000/docs` para abrir a documentação interativa e testar os endpoints diretamente pelo navegador.
 
 ## 📂 Arquivos Importantes
@@ -76,14 +79,13 @@ Acesse o endereço `http://127.0.0.1:8000/docs` para abrir a documentação inte
 - **main.py:** Arquivo principal da aplicação que define os endpoints e a inicialização do servidor.  
 - **.env.example:** Modelo para variáveis de ambiente.  
 - **.gitignore:** Define os arquivos e pastas ignorados pelo controle de versão.
-- **services/openai_service.py:** Módulo que contém a lógica de "cérebro" e a comunicação com a API da OpenAI.  
+- **services/openai_service.py:** Módulo que contém a lógica de "cérebro", o prompt de qualificação e a lógica do "gatilho" JSON.
 - **requirements.txt:** Lista das dependências necessárias para rodar o projeto.  
 
 ---
 
 ## 🔮 Próximos Passos
 
-- Adicionar lógica de qualificação de leads.  
 - Criar endpoint /lead e integração com Pipefy API.  
 - Conectar com ferramenta de agendamento (Google/Calendly).  
 - Criar frontend web em React.  

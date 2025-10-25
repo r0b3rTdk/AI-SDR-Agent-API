@@ -1,6 +1,7 @@
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
+from typing import List, Dict
 
 # Carregar as variaveis do arquivo .env
 load_dotenv()
@@ -17,38 +18,59 @@ client = OpenAI(api_key=api_key)
 # Pegar o modelo do .env, ou usa um padrao se nao for definido
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
 
-def generate_response(user_message: str) -> str:
+def generate_response(history: List[Dict[str, str]]) -> str:
     """
-    Envia a mensagem do usuario para a OpenAI e retorna a resposta da IA
+    Envia o HISTORICO da conversa para a OpenAI e retorna a resposta da IA.
     """
     
     # Aqui fica o "Prompt do Sistema", onde defini a personalidade e objetivos da IA
-    system_prompt = """
-    Você é um agente SDR (Sales Development Representative) da Verzel, 
-    uma empresa de tecnologia e inovação.
+    system_prompt = {
+        "role": "system",
+        "content": """
+        Você é um agente SDR (Sales Development Representative) da Verzel, 
+        uma empresa de tecnologia e inovação.
+        Seu objetivo é conversar naturalmente e coletar 4 informações:
+        1. Nome
+        2. E-mail
+        3. Nome da Empresa
+        4. A necessidade ou desafio que o cliente enfrenta (need/dor).
+        
+        Seja sempre amigável, profissional. Siga o script:
+        1. Apresente-se e ao serviço.
+        2. Faça perguntas de descoberta para coletar as 4 informações.
+        3. Faça a "pergunta direta" (ex: "Você gostaria de seguir com uma conversa...?") 
+        
+        IMPORTANTE: Assim que você tiver coletado com sucesso TODAS as 4 informações (nome, e-mail, empresa, necessidade),
+        E o cliente confirmar interesse na "pergunta direta", você DEVE responder APENAS com
+        um JSON valido, e nada mais.
+        
+        O JSON deve ter o seguinte formato:
+        {
+            "action": "create_lead",
+            "data": {
+                "name": "Nome coletado",
+                "email": "email@coletado.com",
+                "company": "Empresa Coletada",
+                "need": "Necessidade coletada",
+                interest_confirmed: true
+            }
+        }
+        
+        Se o cliente NAO confirmar interesse na "pergunta direta", responda educadamente,
+        agradeca e retorne um JSON similar com "interest_confirmed": false.
+        
+        Enquanto voce nao tiver os 4 dados E a resposta da "pergunta direta",
+        continue a conversa normalmente,
+        """
+    }
     
-    Seu objetivo principal é conversar naturalmente com o cliente, 
-    qualificá-lo e agendar uma reunião.
-    
-    Para qualificar, você precisa coletar 4 informações:
-    1. Nome
-    2. E-mail
-    3. Nome da Empresa
-    4. A necessidade ou desafio que o cliente enfrenta (o "interesse").
-    
-    Seja sempre amigável, profissional e direto ao ponto. 
-    Não invente informações sobre a Verzel.
-    Comece a conversa se apresentando brevemente.
-    """
+    # Montar a lista de mensagens, comecando pelo prompt do sistema
+    messages_to_send = [system_prompt] + history
     
     try:
-        # Aqui e a chamada real
         response = client.chat.completions.create(
             model=OPENAI_MODEL,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_message}
-            ],
+            messages=messages_to_send,
             temperature=0.7 # Controla a criatividade (0.0 = robotico, 1.0 = criativo)
         )
     

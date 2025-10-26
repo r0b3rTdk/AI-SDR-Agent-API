@@ -22,6 +22,7 @@ FIELD_MEETING_TIME = os.getenv("PIPEFY_FIELD_MEETING_TIME")
 # O "endereço" da API do Pipefy
 PIPEFY_GRAPHQL_URL = "https://api.pipefy.com/graphql"
 
+# Função para criar um card no Pipefy
 def create_pipefy_card(lead_data: dict) -> dict:
     """
     Cria um novo card no Pipefy com os dados do lead qualificado.
@@ -94,3 +95,69 @@ def create_pipefy_card(lead_data: dict) -> dict:
     except Exception as e:
         print(f"Erro inesperado no pipefy_service: {e}")
         return {"error": str(e)}
+
+# Função para atualizar o card do Pipefy com as informacoes da reuniao
+def update_pipefy_card_meeting_info(card_id: str, meeting_link: str, meeting_datetime: str) -> bool:
+    """
+    Atualiza um card existente no Pipefy com o link e a daata/hora da reuniao
+    Retorna True se foi bem-sucedido, False caso contrario.
+    """
+    print(f"Atualizando card {card_id} no Pipefy com informações da reunião...")
+    
+    # Precisamos garantir que os IDS dos campos de link e data/hora foram carregados
+    if not FIELD_MEETING_LINK or not FIELD_MEETING_TIME:
+      print(f"Erro: IDs dos campos de reunião não encontrados no .env")
+      return False
+    
+    # A query GrapgQL para ATUALIZAR um card
+    # DIZEMOS: "Para o card com este ID, atualize estes campos com estes valores"
+    mutation = f"""
+        mutation {{
+          updateFieldsValues(input: {{
+            nodeId: "{card_id}",  # ID do Card a ser atualizado
+            values: [
+              {{ fieldId: "{FIELD_MEETING_LINK}", value: "{meeting_link}" }},
+              {{ fieldId: "{FIELD_MEETING_TIME}", value: "{meeting_datetime}" }}
+            ]
+          }}) {{
+            clientMutationId
+            success
+          }}
+        }}
+    """
+    
+    headers = {
+        "Authorization": f"Bearer {PIPEFY_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    payload = {
+        "query": mutation
+    }
+    
+    try :
+      response = requests.post(PIPEFY_GRAPHQL_URL, json=payload, headers=headers)
+      response.raise_for_status() # Verifica erros HTTP
+      response_json = response.json()
+      
+      # Verifica erros do GraphQL
+      if "errors" in response_json:
+            print(f"Erro do GraphQL ao atualizar card {card_id}: {response_json['errors']}")
+            return False
+          
+      update_result = response_json.get("data", {}).get("updateFieldsValues", {})      
+      if update_result and update_result.get("success") is True:
+          print(f"Card {card_id} atualizado com sucesso no Pipefy.")
+          return True
+      else:
+          # Se a chave 'success' não existir ou for false, algo deu errado
+          print(f"Falha ao atualizar card {card_id}, resposta inesperada ou não sucedida: {response_json}")
+          return False
+             
+    except requests.exceptions.HTTPError as http_err:
+        print(f"Erro HTTP ao atualizar card {card_id} no Pipefy: {http_err}")
+        print(f"Resposta: {response.text}")
+        return False
+    except Exception as e:
+        print(f"Erro inesperado ao atualizar card {card_id} no pipefy_service: {e}")
+        return False

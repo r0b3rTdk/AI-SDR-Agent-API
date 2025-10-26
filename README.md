@@ -7,8 +7,8 @@ O objetivo é criar um agente SDR capaz de interagir com potenciais clientes, qu
 
 ## 🚀 Status do Projeto
 
-Fase atual: **Backend com Integração Pipefy (v0.4.0)**  
-Próximo passo: CConectar com ferramenta de agendamento (Google/Calendly).
+Fase atual: **Backend com Agendamento (v0.5.0)**  
+Próximo passo: Criar frontend web em React.
 
 ### Funcionalidades Implementadas
 
@@ -20,6 +20,10 @@ Próximo passo: CConectar com ferramenta de agendamento (Google/Calendly).
 - Lógica de "gatilho" de qualificação (IA retorna um JSON com os dados do lead).
 - Integração real com a API GraphQL do Pipefy.
 - Criação automática de cards no funil de "Pré-vendas" ao detectar o gatilho da IA.
+- Integração (simulada) com a API do Calendly para buscar horários disponíveis.
+- Novo endpoint /schedule para receber a escolha do usuário.
+- Agendamento (simulado) de reunião via calendar_service.
+- Atualização automática do card no Pipefy com o link e data/hora da reunião agendada.
 - Estrutura de ambiente virtual (venv) configurada.
 - Arquivo .env.example para gerenciamento de chaves e variáveis de ambiente.
 - Documentação interativa gerada automaticamente em /docs (Swagger UI).
@@ -70,28 +74,39 @@ Exemplo de resposta:  
 Mensagem: **“AI SDR Agent API - online”**
 
 ### Endpoint de Chat (/chat)
-Recebe um **histórico de mensagens** e, ao final da qualificação, **dispara o gatilho que cria um card no Pipefy.**
+Recebe um **histórico de mensagens** e, ao final da qualificação:
+1. Cria o card no Pipefy
+2. Se o interesse for confirmado, busca e retorna os horários disponíveis (via calendar_service).
 
-Exemplo de resposta (ao final da conversa): 
-Mensagem: **{"status": "success", "message": "Lead criado com sucesso!", "pipefy_card_url": "https://app.pipefy.com/pipes/..."}**
-**Validação:** Um novo card é criado automaticamente na coluna "Pré-vendas" do funil no Pipefy.
+Exemplo de resposta (se interesse confirmado): 
+Mensagem: `{"action": "show_slots", "slots": [...], "lead_data": {...}, "pipefy_card_id": "..."}`
+
+### Endpoint de Agendamento (/schedule)
+Recebe o **slot_info** (horário escolhido pelo usuário), os **lead_data** (dados do lead coletados) e o **pipefy_card_id** (ID do card criado no Pipefy).
+1. Chama o calendar_service para agendar (simular) a reunião no Calendly.
+2. Chama o pipefy_service para **atualizar o card correspondente no Pipefy** com o link (`meeting_link`) e a data/hora (`meeting_datetime`) da reunião agendada.
+
+Exemplo de resposta (em caso de sucesso):
+Mensagem: `{"status": "success", "message": "Reunião agendada com sucesso!", "meeting_link": "https://calendly.com/...", "meeting_datetime": "2025-10-27T..."}`
 
 Acesse o endereço `http://127.0.0.1:8000/docs` para abrir a documentação interativa e testar os endpoints diretamente pelo navegador.
 
+---
+
 ## 📂 Arquivos Importantes
 
-- **main.py:** Arquivo principal da aplicação que define os endpoints e a inicialização do servidor agora também orquestra a chamada para o Pipefy ao detectar o gatilho.  
-- **.env.example:** Modelo para variáveis de ambiente.  
+- **main.py:** Arquivo principal da aplicação que define os endpoints, a inicialização do servidor e **orquestra as chamadas** para os serviços de IA, Pipefy e Calendly.
+- **.env.example:** Modelo para variáveis de ambiente, **incluindo chaves da OpenAI, Pipefy e Calendly, além dos IDs do Pipefy**.
 - **.gitignore:** Define os arquivos e pastas ignorados pelo controle de versão.
 - **services/openai_service.py:** Módulo que contém a lógica de "cérebro", o prompt de qualificação e a lógica do "gatilho" JSON.
-- **services/pipefy_service.py:** Novo módulo que gerencia a autenticação e a query GraphQL para criar cards no Pipefy.
-- **requirements.txt:** Lista das dependências necessárias para rodar o projeto.  
+- **services/pipefy_service.py:** Módulo que gerencia a autenticação e as queries GraphQL para **criar e atualizar cards** no Pipefy.
+- **services/calendar_service.py:** **Novo módulo** que gerencia a busca de horários e o agendamento (simulado) via API do Calendly.
+- **requirements.txt:** Lista das dependências necessárias (**incluindo `fastapi`, `openai`, `requests`**).
 
 ---
 
 ## 🔮 Próximos Passos
 
-- Conectar com ferramenta de agendamento (Google/Calendly).  
 - Criar frontend web em React.  
 - Realizar o deploy completo (Render + Vercel).
 

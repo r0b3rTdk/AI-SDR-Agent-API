@@ -4,13 +4,15 @@ from pydantic import BaseModel
 from services.openai_service import generate_response
 from typing import List, Dict
 import json
-from services.pipefy_service import create_pipefy_card
+from services.pipefy_service import create_pipefy_card, update_pipefy_card_meeting_info
+from services.calendar_service import get_available_slots, create_meeting
+from fastapi import HTTPException
 
 # Criar a instancia principal da aplicacao
 app = FastAPI(
     title="AI SDR Agent API",
     description="API para o agente SDR de IA",
-    version="0.4.0"
+    version="0.5.0"
 )
 
 # --- Modelo de Dados (Pydantic) ---
@@ -23,7 +25,13 @@ class ChatRequest(BaseModel):
 # Definir como sera a resposta do /chat
 class ChatResponse(BaseModel):
     response: str
-
+    
+# Modelo para o novo endpoint de agendamento
+class ScheduleRequest(BaseModel):
+    slot_info: Dict # Informacoes do horario escolhido [ex: {"start_time": "...", "scheduling_url": "..."}]
+    lead_data: Dict # Dados do lead(name, email, company, need)
+    pipefy_card_id: str # ID do card no Pipefy para atualizar
+    
 # --- Rotas da API ---
 # Define uma rota raiz (GET)
 @app.get("/")
@@ -56,23 +64,39 @@ def handle_chat(request: ChatRequest):
         
         # Se der certo, verifica se e o gatilho que esperamos
         if json_data.get("action") == "create_lead":
-            print("GATILHO DETECTADO: 'create_lead'")
-            
+            print("GATILHO DETECTADO: 'create_lead'")           
             lead_data = json_data.get("data")
             print(f"Dados do Lead: {lead_data}")
             
             # Aqui chamamos o servico do Pipefy para criar o card
+            # 1. Criar o card no Pipefy
             card_info = create_pipefy_card(lead_data)
+            pipefy_card_id = card_info.get("id")
             print(f"Informações do card: {card_info}")
             
-            # Retornar uma mensagem de sucesso para o usuario
-            # E TAMBEM o JSON de gatilho
-            return ChatResponse(response=json.dumps({
-                "status": "success",
-                "message": "Lead sendo processado...",
-                "lead_data": lead_data,
-                "pipefy_card": card_info.get("url")
+            # 2. Verifica se o cliente tem interesse para agendar
+            if lead_data.get("interest_confirmed") is True:
+                print("Interesse confirmado, buscando horarios...")
+                
+                # 3. Buscar horarios disponiveis
+                available_slots = get_available_slots() # chama o calendar_service
+            
+                # 4. Retorna os horarios para o frontend
+                # O frontend vai precisar mostrar esses horarios e guardar os dados do lead e o card_id
+                return ChatResponse(response=json.dumps({
+                    "action": "show_slots",
+                    "slots": available_slots,
+                    "lead_data": lead_data, # Devolve os dados para o frontend usar no /schedule
+                    "pipefy_card_id": pipefy_card_id # Devolve o ID para o frontend usar no /schedule
+                }))
+            else:
+                print("Interesse não confirmado. Lead registrado no Pipefy.")
+                return ChatResponse(response=json.dumps({
+                    "status": "success",
+                    "message": "Lead registrado (sem interesse).",
+                    "pipefy_card_url": card_info.get("url") 
             }))
+                
     except json.JSONDecodeError:
         # Se der erro, nao era um JSON. Era so texto normal.
         # Apenas retorna a resposta de texto da IA para continuar a conversa
@@ -81,6 +105,43 @@ def handle_chat(request: ChatRequest):
     
     # Se nao era um gatilho, retorna a resposta normal da IA
     return ChatResponse(response=ai_response)
+
+# --- Endpoint para agendar a reuniao ---
+@app.post("/schedule")
+async def schedule_meeting(request: ScheduleRequest):
+    """
+    Recebe o horario escolhido pelo usuario e os dados do lead,
+    cria o evento no calendly e atualiza o card no Pipefy.
+    """
+    print(f"Recebida solicitação de agendamento para: {request.lead_data.get('email')}")
+    print(f"Slot escolhido: {request.slot_info}")
+    
+    # 1. Criar o evento no Calendly
+    meeting_confirmation = create_meeting(request.slot_info, request.lead_data)
+    
+    if "error" in meeting_confirmation:
+        raise HTTPException(status_code=500, detail=f"Erro ao criar evento no Calendly: {meeting_confirmation['error']}")
+    meeting_link = meeting_confirmation.get("meeting_link")
+    meeting_datetime = meeting_confirmation.get("meeting_datetime")
+    
+    print(f"Reunião agendada! Link: {meeting_link}, Horario: {meeting_datetime}")
+    
+    # 2. Atualizar o card no Pipefy com as informações da reuniao
+    update_success = update_pipefy_card_meeting_info(
+        card_id=request.pipefy_card_id,
+        meeting_link=meeting_link,
+        meeting_datetime=meeting_datetime
+    )
+    if not update_success:
+        print(f"AVISO: Reunião agendada, mas falha ao atualizar o card {request.pipefy_card_id} no Pipefy.")
+    # 3. Retornar a confirmação para o frontend
+    return {
+        "status": "success",
+        "message": "Reunião agendada com sucesso!",
+        "meeting_link": meeting_link,
+        "meeting_datetime": meeting_datetime
+    }
+    
     
 # Permite rodar o app diretamente com python main.py
 if __name__ == "__main__":

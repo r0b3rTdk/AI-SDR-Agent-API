@@ -7,12 +7,27 @@ import json
 from services.pipefy_service import create_pipefy_card, update_pipefy_card_meeting_info
 from services.calendar_service import get_available_slots, create_meeting
 from fastapi import HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 # Criar a instancia principal da aplicacao
 app = FastAPI(
     title="AI SDR Agent API",
     description="API para o agente SDR de IA",
-    version="0.5.0"
+    version="0.6.0"
+)
+
+# --- HABILITAR CORS ---
+origins = [
+    "http://localhost:5173", # A origem do seu frontend React/Vite
+    "http://127.0.0.1:5173", # As vezes o navegador usa esse
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins, # Lista de origens permitidas
+    allow_credentials=True,
+    allow_methods=["*"], # Permite todos os metodos (GET, POST, etc.)
+    allow_headers=["*"], # Permite todos os cabecalhos
 )
 
 # --- Modelo de Dados (Pydantic) ---

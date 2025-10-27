@@ -115,3 +115,30 @@ body { /* Estilo geral para a página */
   font-style: italic;
   color: #777;
 }
+
+/* --- Estilo para os botoes --- */
+.slots-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* Alinha botões à esquerda */
+}
+
+.slot-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 5px;
+  transition: background-color 0.2s ease;
+}
+
+.slot-button:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.slot-button:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
+}

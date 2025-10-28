@@ -40,6 +40,7 @@ app = FastAPI(
 origins = [
     "http://localhost:5173", # A origem do seu frontend React/Vite
     "http://127.0.0.1:5173", # As vezes o navegador usa esse
+    "https://ai-sdr-agent-api.vercel.app" 
 ]
 
 app.add_middleware(

@@ -1,19 +1,39 @@
-from fastapi import FastAPI
-import uvicorn
-from pydantic import BaseModel
-from services.openai_service import generate_response
-from typing import List, Dict
+"""
+Verzel AI SDR Agent API
+Autor: Robert Emanuel
+Descrição: Orquestrador principal da API do agente SDR com integração OpenAI, Pipefy e Calendly.
+Versão: 1.0.0
+Data: 27/10/2025
+"""
+
+# ======================================================
+# 📦 IMPORTAÇÕES
+# ======================================================
+
+# Built-in
 import json
+
+# Terceiros
+import uvicorn
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+
+# Locais (seus modulos)
+from services.openai_service import generate_response
 from services.pipefy_service import create_pipefy_card, update_pipefy_card_meeting_info
 from services.calendar_service import get_available_slots, create_meeting
-from fastapi import HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+from typing import List, Dict
+
+# ======================================================
+# 🚀 CONFIGURAÇÃO DA APLICAÇÃO FASTAPI
+# ======================================================
 
 # Criar a instancia principal da aplicacao
 app = FastAPI(
     title="AI SDR Agent API",
     description="API para o agente SDR de IA",
-    version="0.6.0"
+    version="0.7.0"
 )
 
 # --- HABILITAR CORS ---
@@ -30,7 +50,10 @@ app.add_middleware(
     allow_headers=["*"], # Permite todos os cabecalhos
 )
 
-# --- Modelo de Dados (Pydantic) ---
+# ======================================================
+# 🧩 MODELOS Pydantic
+# ======================================================
+
 # Definir como o corpo da requisicao /chat deve ser
 class ChatRequest(BaseModel):
     # A API agora vai receber o historico da conversa
@@ -46,8 +69,12 @@ class ScheduleRequest(BaseModel):
     slot_info: Dict # Informacoes do horario escolhido [ex: {"start_time": "...", "scheduling_url": "..."}]
     lead_data: Dict # Dados do lead(name, email, company, need)
     pipefy_card_id: str # ID do card no Pipefy para atualizar
+
+
+# ======================================================
+# 🌐 ENDPOINTS DA API
+# ======================================================
     
-# --- Rotas da API ---
 # Define uma rota raiz (GET)
 @app.get("/")
 def read_root():
@@ -59,8 +86,10 @@ def read_root():
 @app.post("/chat", response_model=ChatResponse)
 def handle_chat(request: ChatRequest):
     """
-    Recebe um historico de mensagens, processa pela OpenIA e agora TAMBEM verifica
-    se a resposta e um gatilho de acao (JSON) ou tex
+    Processa o histórico de mensagens do usuário e decide se e uma resposta de texto
+    ou um gatilho de criação de lead.
+    - Se for texto → responde normalmente.
+    - Se for JSON com {"action": "create_lead"} → cria card no Pipefy e agenda.
     """
     # Logar apenas a ultima mensagem para nao poluir demais o console
     if request.history:
@@ -157,7 +186,10 @@ async def schedule_meeting(request: ScheduleRequest):
         "meeting_datetime": meeting_datetime
     }
     
-    
+# ======================================================
+# ▶️ EXECUÇÃO LOCAL
+# ======================================================
+
 # Permite rodar o app diretamente com python main.py
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)

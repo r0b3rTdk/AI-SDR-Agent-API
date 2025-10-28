@@ -1,4 +1,4 @@
-**🤖 Estudo de Caso: Verzel AI SDR Agent API (Versão Final Completa)**
+# 🤖 Estudo de Caso: Verzel AI SDR Agent API (Versão Final Completa)
 
 **📁 Introdução**
 
@@ -134,17 +134,28 @@ Validações:
 
 ![alt text](image-2.png)
 
-**🚀 Fase 6: Agir (Entrega Final e Revisão)**
+**🚀 Fase 6: Agir (Entrega Final e Deploy)**
 
-Tarefas:  
-- Atualizar README final com links de deploy.  
-- Testar sistema completo após deploy.  
-- Revisar critérios de sucesso.  
-  
-Validações:  
-- Repositório GitHub completo e funcional.  
-- Documentação atualizada.  
-- Sistema 100% operacional.
+Tarefas:
+- Configurar e realizar o deploy do backend FastAPI no Render.
+- Configurar e realizar o deploy do frontend React no Vercel.
+- Atualizar a constante `API_URL` no código do frontend para apontar para a URL do Render.
+- Configurar o CORS no backend para permitir requisições da URL do Vercel.
+- Testar a aplicação completa nos links públicos.
+- Atualizar a documentação (`README.md` e este Estudo de Caso) com os links de deploy.
+- Revisar todos os critérios de sucesso do desafio.
+- Enviar o link do repositório GitHub para a Verzel.
+
+Entregas:
+- Link do Backend (Render): [https://verzel-sdr-backend.onrender.com/](https://verzel-sdr-backend.onrender.com/)
+- Link do Frontend (Vercel): [https://ai-sdr-agent-api.vercel.app/](https://ai-sdr-agent-api.vercel.app/)
+- Repositório GitHub finalizado com código e documentação.
+
+Validações:
+- Aplicação Acessível: Os links do Render e Vercel estão funcionando.
+- Funcionalidade Completa Online: O fluxo completo (conversa -> qualificação -> criação card -> oferta horários -> agendamento -> atualização card) funciona na versão deployada.
+- Documentação Finalizada: `README.md` e `ESTUDO_DE_CASO.md` estão completos e atualizados com os links.
+- Critérios Cumpridos: Todos os requisitos do desafio da Verzel foram atendidos.
 
 **📋 Backlog Ágil – Verzel AI SDR Agent API**
 

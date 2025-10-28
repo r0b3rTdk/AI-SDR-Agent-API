@@ -20,9 +20,9 @@ Próximo passo: Realizar o deploy completo (Render + Vercel).
 - Lógica de "gatilho" de qualificação (IA retorna um JSON com os dados do lead).
 - Integração real com a API GraphQL do Pipefy.
 - Criação automática de cards no funil de "Pré-vendas" ao detectar o gatilho da IA.
-- Integração (simulada) com a API do Calendly para buscar horários disponíveis.
+- Integração com a API do Calendly para buscar horários disponíveis (simulada devido a potenciais limitações da API gratuita para busca programática).
 - Novo endpoint /schedule para receber a escolha do usuário.
-- Agendamento (simulado) de reunião via calendar_service.
+- Agendamento de reunião via calendar_service (simulado devido a potenciais limitações da API gratuita para criação programática de eventos).
 - Atualização automática do card no Pipefy com o link e data/hora da reunião agendada.
 - Frontend (Webchat) básico criado com React + Vite.
 - Interface de chat funcional: exibe histórico, permite envio de mensagens.

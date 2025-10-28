@@ -89,7 +89,7 @@ Validações:
 Tarefas:  
 - Implementar openai_service.py (memória e gatilho).  
 - Implementar pipefy_service.py (criação e atualização de cards).  
-- Implementar calendar_service.py (slots e agendamento).  
+- Implementar calendar_service.py (slots e agendamento). Foram utilizadas simulações para as funções get_available_slots e create_meeting, pois a API gratuita do Calendly pode apresentar restrições para buscar/criar eventos de forma programática, exigindo interações via link de agendamento ou planos pagos para automação completa.  
 - Adicionar logs e tratamento de erros.  
   
 Validações:  

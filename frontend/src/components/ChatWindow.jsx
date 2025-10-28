@@ -2,8 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import './ChatWindow.css';
 
 // Defina a URL do seu backend FastAPI
-const API_URL = 'http://localhost:8000';
-
+const API_URL = 'https://verzel-sdr-backend.onrender.com'; // <-- SUA URL DO RENDER AQUI
 function ChatWindow() {
     // Estado para guardar as mensagens { role: 'user'/'assistant', content: '...' }
     const [messages, setMessages] = useState([]);

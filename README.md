@@ -1,189 +1,298 @@
-# 🤖 Verzel AI SDR Agent API
+# AI SDR Agent API
 
-API Backend para o **Agente SDR com Inteligência Artificial**, desenvolvida como parte do desafio técnico **Verzel**.  
-O objetivo é criar um agente SDR capaz de interagir com potenciais clientes, qualificar leads e automatizar o início do funil de vendas, integrando futuramente com a **OpenAI API** e ferramentas como **Pipefy** e **Calendly**.
+Agente SDR (Sales Development Representative) que conversa com um lead via webchat, qualifica esse lead com um LLM, registra os dados no Pipefy e oferece um horário de reunião. Desenvolvido como desafio técnico para a Verzel.
 
----
+**Status:** MVP completo e deployado — fluxo de conversa, qualificação e CRM real via Pipefy; agendamento no Calendly ainda simulado.
 
-## 🚀 Aplicação Online (Deploy)
+**Aplicação online:**
+- Webchat (Vercel): [ai-sdr-agent-api.vercel.app](https://ai-sdr-agent-api.vercel.app/)
+- API (Render): [verzel-sdr-backend.onrender.com](https://verzel-sdr-backend.onrender.com/)
 
-A aplicação completa está disponível publicamente nos seguintes links:
-
-* **Webchat (Frontend - Vercel):** [https://ai-sdr-agent-api.vercel.app/](https://ai-sdr-agent-api.vercel.app/)
-* **API (Backend - Render):** [https://verzel-sdr-backend.onrender.com/](https://verzel-sdr-backend.onrender.com/)
-
-*(**Nota:** O plano gratuito do Render pode colocar o backend para "dormir" após inatividade. O primeiro acesso pode levar alguns segundos extras para "acordar" o servidor.)*
+O backend está no plano gratuito do Render, então a primeira requisição depois de um tempo parado pode demorar alguns segundos para acordar o serviço.
 
 ---
 
-## 🚀 Status do Projeto
+## Problema Resolvido
 
-Fase atual: **Aplicação Completa e Deployada (v1.0.0)**
+O primeiro contato de vendas costuma seguir sempre o mesmo roteiro: descobrir nome, e-mail, empresa e a dor do lead, e só depois marcar uma reunião. É repetitivo e consome tempo de um SDR humano antes mesmo de saber se o lead vale a pena.
 
-### Funcionalidades Implementadas
-
-- Servidor web utilizando FastAPI.
-- Frontend (Webchat) interativo criado com React + Vite.
-- Endpoint raiz (`/`) para verificação de status da API
-- Endpoint `/chat` (POST) que processa um histórico de mensagens via OpenAI.- Implementação de memória de conversa (o backend agora lida com um histórico).
-- Implementação de memória de conversa no agente.
-- Lógica de "gatilho" de qualificação (IA retorna um JSON com os dados do lead).
-- Integração real com a API GraphQL do Pipefy.
-- Criação automática de cards no funil de "Pré-vendas" ao detectar o gatilho da IA.
-- Integração com a API do Calendly **(simulada devido a limitações da API gratuita para busca/criação programática)**
-- Endpoint `/schedule` (POST) para receber a escolha de horário do usuário.
-- Agendamento **(simulado)** de reunião via `calendar_service`
-- Atualização automática do card no Pipefy com o link e data/hora da reunião agendada.
-- Interface de chat funcional: exibe histórico, permite envio de mensagens, mostra botões de horário
-- Conexão Frontend <-> Backend configurada com CORS para produção
-- Lógica completa de agendamento no Frontend
-- Estrutura de ambiente virtual (`venv`) para o backend.
-- Gerenciamento seguro de chaves com arquivos `.env`
-- Documentação interativa da API via Swagger UI (`/docs`).
-- Deploy do Backend no Render e Frontend no Vercel
+Este projeto tira essa primeira etapa das mãos de uma pessoa. Um agente conversa com o lead, coleta os quatro dados via linguagem natural, cria automaticamente o card no CRM (Pipefy) e oferece horário de reunião. O SDR humano só entra depois que o lead já está qualificado e agendado.
 
 ---
 
-## 🧱 Estrutura do Projeto
+## Como Funciona
 
-O projeto é organizado em duas pastas principais para facilitar manutenção e escalabilidade:
-- `backend/`: Contém a API RESTful desenvolvida com Python e FastAPI, responsável pela orquestração dos serviços (IA, Pipefy, Calendly).
-- `frontend/`: Contém a interface do Webchat desenvolvida com React e Vite, responsável pela interação com o usuário.
-- `docs/`: Contém a documentação detalhada (Estudo de Caso) e imagens.
+O fluxo passa por dois endpoints, `/chat` e `/schedule`, e quem decide quando o lead está qualificado é o próprio modelo de linguagem, não uma regra escrita no backend.
 
----
+```mermaid
+flowchart TD
+    A[Usuario conversa no Webchat] --> B[POST /chat com o historico]
+    B --> C[OpenAI gera a proxima resposta]
+    C --> D{Resposta e um JSON de gatilho?}
+    D -- Nao, e texto --> E[Continua a conversa normalmente]
+    D -- Sim, action=create_lead --> F[Cria card no Pipefy]
+    F --> G{Interesse confirmado?}
+    G -- Nao --> H[Retorna lead registrado, sem agendamento]
+    G -- Sim --> I[Busca horarios disponiveis - simulado]
+    I --> J[Frontend exibe botoes de horario]
+    J --> K[Usuario escolhe um horario]
+    K --> L[POST /schedule]
+    L --> M[Cria a reuniao - simulado]
+    M --> N[Atualiza o card no Pipefy com link e data]
+    N --> O[Confirma o agendamento no chat]
+```
 
-## 🛠️ Tecnologias Utilizadas
-
-* **Backend:** Python 3.x, FastAPI, Uvicorn, Pydantic, python-dotenv, OpenAI, Requests.
-* **Frontend:** React, Vite, CSS, Fetch API.
-* **Infraestrutura:** Render (Backend), Vercel (Frontend), GitHub (Versionamento).
-* **Ferramentas Externas:** Pipefy (CRM), Calendly (Agenda - Simulado).
-
----
-
-## ⚙️ Configuração e Execução Local
-
-Siga estas instruções para configurar e rodar o projeto completo na sua máquina.
-
-**Backend (API FastAPI):**
-
-1.  Acesse a pasta `backend/`.
-2.  Crie e ative um ambiente virtual Python:
-    ```bash
-    py -m venv venv
-    .\venv\Scripts\activate
-    ```
-3.  Instale as dependências Python:
-    ```bash
-    pip install -r requirements.txt
-    ```
-4.  Crie o arquivo `.env` copiando o `.env.example`.
-5.  Preencha o `.env` com suas chaves de API (OpenAI, Pipefy, Calendly) e os IDs do Pipefy (Pipe, Fase, Campos).
-6.  Execute o servidor backend:
-    ```bash
-    uvicorn main:app --reload
-    ```
-    A API estará disponível em `http://localhost:8000`.
-
-**Frontend (Webchat React):**
-
-1.  Acesse a pasta `frontend/`.
-2.  Instale as dependências JavaScript:
-    ```bash
-    npm install
-    ```
-3.  Execute o servidor de desenvolvimento do frontend:
-    ```bash
-    npm run dev
-    ```
-4.  Acesse o chat no seu navegador no endereço fornecido (geralmente `http://localhost:5173`).
+O frontend nunca guarda estado no backend: a cada mensagem, ele reenvia o histórico inteiro da conversa. O `card_id` e os dados do lead que entram em `/schedule` também vêm de volta do próprio frontend, recebidos na resposta anterior do `/chat`.
 
 ---
 
-## 🧪 Testando a Aplicação Completa
+## Arquitetura
 
-Com o **Backend** (`uvicorn`) e o **Frontend** (`npm run dev`) rodando simultaneamente:
-
-1.  **Acesse o Webchat:** Abra seu navegador no endereço fornecido pelo `npm run dev` (geralmente `http://localhost:5173`).
-2.  **Inicie a Conversa:** Digite uma mensagem inicial (ex: "Olá") e clique em "Enviar".
-3.  **Siga o Fluxo de Qualificação:** Responda às perguntas do agente (nome, e-mail, empresa, necessidade).
-4.  **Confirme o Interesse:** Quando o agente fizer a "pergunta direta", responda positivamente (ex: "Sim", "Tenho interesse").
-5.  **Verifique os Horários:** O chat deve exibir a mensagem "Escolha um horário:" seguida por **botões clicáveis** com as datas/horas disponíveis (simuladas).
-    * *Validação (Backend):* Neste ponto, verifique no terminal do `uvicorn` se o gatilho `create_lead` foi detectado e se o card inicial foi criado no Pipefy (`Card criado com sucesso...`).
-6.  **Clique em um Horário:** Selecione um dos botões de horário disponíveis.
-7.  **Verifique a Confirmação:** O chat deve exibir a mensagem "Ok, agendando..." seguida pela confirmação final com o link da reunião (simulado) e a data/hora escolhida.
-8.  **Validações Finais:**
-    * **Backend:** Verifique no terminal do `uvicorn` se o endpoint `/schedule` foi chamado com sucesso e se o log indica que o card no Pipefy foi atualizado (`Card ... atualizado com sucesso...`).
-    * **Frontend:** Confirme que todo o fluxo da conversa, desde o início até a confirmação do agendamento, foi exibido corretamente na interface do chat.
-    * **Pipefy:** Abra o card correspondente no seu funil do Pipefy (pelo ID ou pelo título) e verifique se os campos `meeting_link` e `meeting_datetime` foram preenchidos corretamente.
-
-
-### Endpoint Raiz (/)
-Verifica se o servidor está online.  
-O retorno esperado é uma mensagem confirmando o status ativo da API.
-
-Exemplo de resposta:  
-Mensagem: **“AI SDR Agent API - online”**
-
-### Endpoint de Chat (/chat)
-Recebe um **histórico de mensagens** e, ao final da qualificação:
-1. Cria o card no Pipefy
-2. Se o interesse for confirmado, busca e retorna os horários disponíveis (via calendar_service).
-
-Exemplo de resposta (se interesse confirmado): 
-Mensagem: `{"action": "show_slots", "slots": [...], "lead_data": {...}, "pipefy_card_id": "..."}`
-
-### Endpoint de Agendamento (/schedule)
-Recebe o **slot_info** (horário escolhido pelo usuário), os **lead_data** (dados do lead coletados) e o **pipefy_card_id** (ID do card criado no Pipefy).
-1. Chama o calendar_service para agendar (simular) a reunião no Calendly.
-2. Chama o pipefy_service para **atualizar o card correspondente no Pipefy** com o link (`meeting_link`) e a data/hora (`meeting_datetime`) da reunião agendada.
-
-Exemplo de resposta (em caso de sucesso):
-Mensagem: `{"status": "success", "message": "Reunião agendada com sucesso!", "meeting_link": "https://calendly.com/...", "meeting_datetime": "2025-10-27T..."}`
-
-Acesse o endereço `http://127.0.0.1:8000/docs` para abrir a documentação interativa e testar os endpoints diretamente pelo navegador.
+- **`backend/main.py`** — camada HTTP. Define os endpoints `/`, `/chat` e `/schedule`, os modelos Pydantic da requisição/resposta, o CORS e a orquestração entre os serviços. Não tem lógica de qualificação própria — só decide o que fazer com o que os serviços devolvem.
+- **`backend/services/openai_service.py`** — é onde mora a "personalidade" do agente: um único system prompt que define o papel do SDR, os quatro dados a coletar e o contrato de JSON que o modelo deve devolver quando a qualificação termina.
+- **`backend/services/pipefy_service.py`** — cria e atualiza cards no Pipefy via GraphQL puro (sem SDK), usando `requests`.
+- **`backend/services/calendar_service.py`** — busca os horários e cria a reunião no Calendly. As chamadas de autenticação (buscar usuário e tipo de evento) são reais; a lista de horários e a criação do evento em si são dados simulados, porque o plano gratuito do Calendly não permite isso via API.
+- **`frontend/src/components/ChatWindow.jsx`** — concentra toda a lógica do lado do cliente: histórico da conversa, chamada a `/chat`, exibição dos botões de horário e chamada a `/schedule`.
 
 ---
 
-## 📂 Arquivos Importantes
+## Integração com LLM
 
-**Backend (`backend/`):**
+Em vez de programar uma máquina de estados no backend para controlar cada etapa da qualificação (pergunta o nome → pergunta o e-mail → ...), deleguei essa lógica inteira para o modelo através de um único system prompt. O modelo conduz a conversa e, quando já tem os quatro dados e a confirmação de interesse, deve responder **apenas** com um JSON no formato:
 
--   `main.py`: Arquivo principal da API FastAPI, orquestra as chamadas aos serviços.
--   `services/openai_service.py`: Módulo para interação com a API da OpenAI (cérebro da IA).
--   `services/pipefy_service.py`: Módulo para criar e atualizar cards no Pipefy via GraphQL.
--   `services/calendar_service.py`: Módulo para buscar horários e agendar reuniões (simulado) com Calendly.
--   `.env`: Arquivo (ignorado pelo Git) com todas as chaves de API e IDs.
--   `.env.example`: Modelo do arquivo `.env`.
--   `requirements.txt`: Lista de dependências Python (`fastapi`, `openai`, `requests`, etc.).
+```json
+{
+  "action": "create_lead",
+  "data": {
+    "name": "...",
+    "email": "...",
+    "company": "...",
+    "need": "...",
+    "interest_confirmed": true
+  }
+}
+```
 
-**Frontend (`frontend/`):**
+O `main.py` tenta fazer `json.loads()` em toda resposta da IA. Se der certo e vier com `action: create_lead`, trata como gatilho de negócio; se der `JSONDecodeError`, trata como texto normal e a conversa continua.
 
--   `src/App.jsx`: Componente raiz da aplicação React.
--   `src/components/ChatWindow.jsx`: Componente principal que implementa a interface, a lógica do chat, a exibição dos horários e a chamada para o agendamento (/schedule).
--   `src/components/ChatWindow.css`: Arquivo de estilização para o componente de chat.
--   `package.json`: Arquivo que define o projeto Node.js e suas dependências JavaScript (`react`, `vite`).
--   `vite.config.js`: Arquivo de configuração do Vite (geralmente não precisa mexer).
-
-**Documentação (`docs/`):**
-
-* `ESTUDO_DE_CASO.md`: Documentação detalhada do projeto (ou `Verzel_AI_SDR_Agent_Case.md`).
-* Arquivos de imagem dos diagramas e prints.
+Essa escolha simplifica bastante o orquestrador, mas transfere para o prompt uma responsabilidade que normalmente seria de código determinístico — se o modelo devolver um JSON num formato levemente diferente do esperado, o gatilho simplesmente não é detectado, sem erro nenhum aparente. Tem mais sobre isso na seção de limitações.
 
 ---
 
-## 🔮 Próximos Passos
+## Decisões de Arquitetura
 
-*(Melhorias futuras poderiam incluir: integração real com Calendly API se viável, tratamento mais robusto de erros, testes automatizados, interface de usuário mais elaborada).*
+**FastAPI** — pela validação automática via Pydantic e pelo `/docs` interativo, que uso pra testar o fluxo manualmente sem montar um cliente HTTP à parte.
+
+**LLM como controlador do fluxo** — explicado na seção anterior. Prioriza flexibilidade de conversa sobre previsibilidade de máquina de estados.
+
+**Pipefy via GraphQL cru** — só precisava de duas mutations (criar e atualizar card), então montei as queries como string em vez de trazer um SDK inteiro para isso.
+
+**Calendly simulado, mas com autenticação real** — o plano gratuito da API não permite buscar/criar horários programaticamente. Mantive as chamadas reais de `_get_user_url` e `_get_event_type_uri` para validar que as credenciais do Calendly estão corretas, e simulei só a parte que a API gratuita não permite.
+
+**Falha rápida na inicialização** — se `OPENAI_API_KEY` não estiver no `.env`, `openai_service.py` levanta um erro assim que é importado, e a aplicação nem sobe. Preferi isso a deixar o servidor no ar e falhar silenciosamente no meio de uma conversa.
+
+**CORS com lista explícita de origens** — como uso `allow_credentials=True`, não é possível liberar com `"*"`. Listei manualmente `localhost`, `127.0.0.1` e o domínio do Vercel.
 
 ---
 
-## 👨‍💻 Autor
+## Trade-offs
 
-**Robert Emanuel**  
-Backend Developer | C, Python, FastAPI, SQL  
-LinkedIn: [linkedin](https://www.linkedin.com/in/robert-emanuel/)  
-GitHub: [github](https://github.com/r0b3rTdk)
+**Estado só existe na conversa, não em banco.** Todo o progresso do lead vive no histórico que o frontend reenvia a cada requisição. Simplifica o backend, mas significa que um refresh de página no meio do fluxo perde a conversa — e o card já criado no Pipefy fica órfão, sem o agendamento.
+
+**`/chat` é síncrono, `/schedule` é assíncrono, e isso muda o comportamento.** `handle_chat` é uma função `def` normal, então o FastAPI a roda automaticamente numa threadpool, mesmo fazendo chamadas bloqueantes (OpenAI, Pipefy) com `requests`. Já `schedule_meeting` é `async def`, mas chama as mesmas funções bloqueantes diretamente — nesse caso, sem o benefício da threadpool, a chamada bloqueia o event loop. É uma inconsistência que só aparece quando se olha os dois endpoints lado a lado.
+
+**Confiar no formato de JSON que o próprio modelo gera.** Funciona na prática na maior parte do tempo, mas é uma dependência de comportamento do modelo, não uma garantia estrutural — ver limitações.
+
+**GraphQL montado com f-string.** Simples de escrever e de ler, mas os valores do lead (nome, e-mail, empresa, necessidade) entram direto na string da mutation, sem escapar aspas.
 
 ---
+
+## Estrutura do Projeto
+
+```text
+AI-SDR-Agent-API/
+├── backend/
+│   ├── main.py                    # endpoints /, /chat, /schedule
+│   ├── requirements.txt
+│   ├── .env.example
+│   └── services/
+│       ├── openai_service.py       # prompt do agente + chamada a OpenAI
+│       ├── pipefy_service.py       # criação/atualização de card via GraphQL
+│       └── calendar_service.py     # horários e agendamento (parcialmente simulado)
+├── frontend/
+│   ├── src/
+│   │   ├── App.jsx
+│   │   └── components/
+│   │       └── ChatWindow.jsx      # UI do chat, chamadas a /chat e /schedule
+│   └── package.json
+└── docs/
+    ├── Verzel_AI_SDR_Agent_Case.md  # estudo de caso do desafio
+    └── diagramas e prints (.jpg/.png)
+```
+
+---
+
+## Tecnologias
+
+| Tecnologia | Papel no projeto |
+|---|---|
+| FastAPI | Expõe `/`, `/chat` e `/schedule` |
+| OpenAI SDK | Conduz a conversa e emite o gatilho de qualificação |
+| Pydantic | Valida os payloads de `/chat` e `/schedule` |
+| Requests | Chamadas GraphQL ao Pipefy e REST ao Calendly |
+| python-dotenv | Carrega as chaves de API do `.env` |
+| React + Vite | Interface do webchat |
+| Pipefy | CRM onde o lead qualificado vira um card |
+| Calendly | Agendamento de reunião (parcialmente simulado) |
+| Render / Vercel | Hospedagem do backend e do frontend, respectivamente |
+
+---
+
+## Como Executar
+
+### Backend
+
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate          # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+Copie `.env.example` para `.env` e preencha:
+
+```env
+OPENAI_API_KEY=sua_chave
+OPENAI_MODEL=gpt-4.1-mini
+PIPEFY_API_KEY=sua_chave
+PIPE_ID=id_do_pipe
+PHASE_ID=id_da_fase
+PIPEFY_FIELD_NAME=id_do_campo
+PIPEFY_FIELD_EMAIL=id_do_campo
+PIPEFY_FIELD_COMPANY=id_do_campo
+PIPEFY_FIELD_NEED=id_do_campo
+PIPEFY_FIELD_INTEREST=id_do_campo
+PIPEFY_FIELD_MEETING_LINK=id_do_campo
+PIPEFY_FIELD_MEETING_TIME=id_do_campo
+CALENDLY_API_KEY=sua_chave
+```
+
+Sem `OPENAI_API_KEY`, a aplicação nem sobe (ver decisões de arquitetura).
+
+```bash
+uvicorn main:app --reload
+```
+
+API em `http://127.0.0.1:8000`, docs em `http://127.0.0.1:8000/docs`.
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+```
+
+A URL do backend está fixa em `src/components/ChatWindow.jsx`, na constante `API_URL` — hoje ela aponta para o backend em produção no Render. Para testar contra o backend local, troque essa linha para `http://127.0.0.1:8000` antes de rodar:
+
+```bash
+npm run dev
+```
+
+Chat em `http://localhost:5173`.
+
+---
+
+## Como Testar
+
+Não há testes automatizados no repositório. A validação é manual:
+
+**Backend isolado**, via Swagger (`/docs`) ou curl:
+
+```bash
+curl -X POST http://127.0.0.1:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"history": [{"role": "user", "content": "Olá"}]}'
+```
+
+**Fluxo completo**, com backend e frontend rodando ao mesmo tempo:
+
+1. Abra o webchat e envie uma mensagem inicial.
+2. Responda às perguntas do agente (nome, e-mail, empresa, necessidade).
+3. Confirme interesse quando o agente perguntar diretamente.
+4. Confira no terminal do `uvicorn` se apareceu `GATILHO DETECTADO: 'create_lead'` e se o card foi criado no Pipefy.
+5. Escolha um dos horários exibidos no chat.
+6. Confira se o card no Pipefy foi atualizado com `meeting_link` e `meeting_datetime`.
+
+---
+
+## Limitações Conhecidas
+
+- O exemplo de JSON dentro do próprio system prompt tem uma chave sem aspas (`interest_confirmed: true`), o que é JSON inválido. Se o modelo reproduzir esse formato literalmente na resposta, o `json.loads()` em `main.py` falha e o gatilho `create_lead` não é detectado — a conversa simplesmente continua como texto normal, sem erro visível.
+- `/schedule` é `async def` mas chama funções bloqueantes de `requests` diretamente, travando o event loop sob carga concorrente; `/chat`, por ser `def` normal, não tem esse problema porque o FastAPI a roda em threadpool.
+- Os dados do lead entram sem escapar na string da mutation GraphQL do Pipefy — um nome, e-mail ou necessidade com aspas duplas pode quebrar a query.
+- Não existe persistência: um refresh de página no meio do fluxo perde a conversa e deixa o card do Pipefy sem agendamento.
+- A busca de horários e a criação da reunião no Calendly são simuladas; nenhum convite real é enviado.
+- A URL do backend no frontend é uma constante fixa no código-fonte, não uma variável de ambiente — trocar de ambiente exige editar `ChatWindow.jsx` e gerar novo build.
+- Sem testes automatizados.
+- Sem retry em nenhuma das integrações externas (OpenAI, Pipefy, Calendly).
+
+---
+
+## O que este projeto ainda NÃO faz
+
+- Não persiste leads, conversas ou cards em nenhum banco de dados.
+- Não tem autenticação/autorização em nenhum endpoint.
+- Não integra de fato com a busca de disponibilidade e criação de eventos do Calendly.
+- Não tem observabilidade além dos `print()` no console do backend.
+- Não tem rate limiting — qualquer volume de chamadas ao `/chat` gera custo direto de tokens na OpenAI.
+- Não tem Docker nem pipeline de CI/CD configurado no repositório.
+- Não tem testes automatizados.
+
+O foco desta fase foi validar o fluxo ponta a ponta (conversa → qualificação → CRM → agendamento) e colocá-lo no ar, não deixá-lo pronto para produção.
+
+---
+
+## Próximos Passos
+
+- Corrigir o exemplo de JSON no system prompt (aspas em `interest_confirmed`).
+- Escapar os dados do lead antes de interpolar na mutation GraphQL do Pipefy.
+- Trocar a URL fixa do frontend por uma variável de ambiente do Vite (`import.meta.env`).
+- Persistir o `card_id` e o estado do lead em algo simples (ex.: localStorage ou um banco leve), para sobreviver a um refresh.
+- Avaliar alternativas ao Calendly com free tier mais permissivo para agendamento real.
+- Escrever testes para os três services, mockando OpenAI, Pipefy e Calendly.
+
+---
+
+## Evolução para Produção
+
+- **Fila** para desacoplar as chamadas a OpenAI, Pipefy e Calendly da resposta HTTP, evitando que o usuário espere três APIs de terceiro em série.
+- **Banco de dados (PostgreSQL)** para persistir leads e o status de cada conversa, evitando cards órfãos no Pipefy.
+- **Autenticação** nos endpoints, principalmente `/schedule`, hoje aberto para qualquer chamada.
+- **Observabilidade** com logs estruturados e métricas de conversão do funil (quantas conversas viram card, quantas viram agendamento).
+- **Cliente GraphQL tipado** para o Pipefy, no lugar das mutations em f-string.
+- **CI/CD** rodando o lint do frontend (já configurado com ESLint) e os testes do backend a cada push.
+- **Rate limiting** no `/chat`, já que cada chamada tem custo direto de tokens.
+
+---
+
+## Aprendizados
+
+A maior dificuldade não foi integrar as três APIs, foi aceitar que o LLM é quem controla o fluxo de negócio. Funciona bem na prática, mas fica evidente o quanto a solução depende do modelo obedecer ao contrato de JSON pedido no prompt — e só percebi, revisando o próprio prompt, que o exemplo que dou ao modelo tem uma chave sem aspas.
+
+Comparar `/chat` (sync) com `/schedule` (async) me ensinou na prática a diferença entre os dois no FastAPI: numa rota sync, o framework me protege rodando em threadpool; numa rota async, se eu não uso um cliente assíncrono de verdade, o bloqueio é problema meu.
+
+Ter que simular parte da integração com o Calendly me ensinou a deixar isso explícito no próprio código — comentário dizendo o que é real e o que é mock — porque é fácil esquecer, meses depois, que aquele link de reunião nunca foi de verdade.
+
+---
+
+## Autor
+
+**Robert Emanuel**
+
+Desenvolvedor Back-end focado em Python, FastAPI, SQL, Docker e APIs REST.
+
+GitHub:
+https://github.com/r0b3rTdk
+
+LinkedIn:
+https://www.linkedin.com/in/robert-emanuel/
